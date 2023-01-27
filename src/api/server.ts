@@ -44,7 +44,7 @@ function getRandomInt(min: number, max: number) {
   return Math.floor(rng() * (max - min + 1)) + min
 }
 
-const randomFromArray = (array: any[]) => {
+const randomFromArray: <T>(array: T[]) => T = (array) => {
   const index = getRandomInt(0, array.length - 1)
   return array[index]
 }
@@ -142,7 +142,7 @@ export const handlers = [
     return res(ctx.delay(ARTIFICIAL_DELAY_MS), ctx.json(posts))
   }),
   rest.post('/fakeApi/posts', function (req, res, ctx) {
-    const data = req.body as { [key: string]: any }
+    const data = req.body && typeof req.body === 'object' ? { ...req.body } : {}
 
     if (data.content === 'error') {
       return res(
@@ -168,7 +168,7 @@ export const handlers = [
     return res(ctx.delay(ARTIFICIAL_DELAY_MS), ctx.json(serializePost(post!)))
   }),
   rest.patch('/fakeApi/posts/:postId', (req, res, ctx) => {
-    const { id, ...data } = req.body as { [key: string]: any }
+    const data = req.body! as Object
     const updatedPost = db.post.update({
       where: { id: { equals: req.params.postId as string | undefined } },
       data,
@@ -221,11 +221,7 @@ export const handlers = [
   rest.get('/fakeApi/notifications', (req, res, ctx) => {
     const numNotifications = getRandomInt(1, 5)
 
-    let notifications = generateRandomNotifications(
-      undefined,
-      numNotifications,
-      db
-    )
+    let notifications = generateRandomNotifications(undefined, numNotifications)
 
     return res(ctx.delay(ARTIFICIAL_DELAY_MS), ctx.json(notifications))
   }),
@@ -252,7 +248,7 @@ const sendMessage = (socket: Client, obj: { [key: string]: any }) => {
 const sendRandomNotifications = (socket: Client, since: string) => {
   const numNotifications = getRandomInt(1, 5)
 
-  const notifications = generateRandomNotifications(since, numNotifications, db)
+  const notifications = generateRandomNotifications(since, numNotifications)
 
   sendMessage(socket, { type: 'notifications', payload: notifications })
 }
@@ -295,8 +291,7 @@ const parseISO = (dateString: string) => {
 
 function generateRandomNotifications(
   since: string | undefined,
-  numNotifications: number,
-  db: ReturnType<typeof factory>
+  numNotifications: number
 ) {
   const now = new Date()
   let pastDate: undefined | Date
