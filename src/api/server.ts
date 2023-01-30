@@ -4,6 +4,7 @@ import { nanoid } from '@reduxjs/toolkit'
 import faker from 'faker'
 import seedrandom from 'seedrandom'
 import { Client, Server as MockSocketServer } from 'mock-socket'
+import { parseISO } from 'date-fns'
 
 const NUM_USERS = 3
 const POSTS_PER_USER = 3
@@ -283,11 +284,6 @@ const notificationTemplates = [
   `is glad we're friends`,
   'sent you a gift',
 ]
-
-const parseISO = (dateString: string) => {
-  const [year, month, day] = dateString.split('-')
-  return new Date(Number(year), Number(month) - 1, Number(day))
-}
 
 function generateRandomNotifications(
   since: string | undefined,
