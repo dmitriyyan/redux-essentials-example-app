@@ -40,6 +40,8 @@ export async function client(
   } catch (err) {
     if (err instanceof Error) {
       return Promise.reject(err.message ? err.message : data)
+    } else {
+      return Promise.reject(data)
     }
   }
 }

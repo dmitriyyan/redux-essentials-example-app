@@ -2,16 +2,14 @@ import React, { useState } from 'react'
 import { RouteComponentProps, useHistory } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 
-import { postUpdated } from './postsSlice'
+import { postUpdated, selectPostById } from './postsSlice'
 
 export const EditPostForm = ({
   match,
 }: RouteComponentProps<{ postId: string }>) => {
   const { postId } = match.params
 
-  const post = useAppSelector((state) =>
-    state.posts.find((post) => post.id === postId)
-  )
+  const post = useAppSelector((state) => selectPostById(state, postId))
 
   const [title, setTitle] = useState(post?.title || '')
   const [content, setContent] = useState(post?.content || '')
