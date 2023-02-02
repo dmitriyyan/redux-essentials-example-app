@@ -1,8 +1,9 @@
 import { Link, RouteComponentProps } from 'react-router-dom'
 
 import { selectUserById } from '../users/usersSlice'
-import { selectPostsByUser } from '../posts/postsSlice'
 import { useAppSelector } from '../../app/hooks'
+import { useGetPostsQuery } from '../api/apiSlice'
+import { selectPostsForUser } from '../posts/postsSlice'
 
 export const UserPage = ({
   match,
@@ -11,16 +12,17 @@ export const UserPage = ({
 
   const user = useAppSelector((state) => selectUserById(state, userId))
 
-  const postsForUser = useAppSelector((state) =>
-    selectPostsByUser(state, userId)
-  )
-
-  const postTitles = postsForUser.map((post) => (
-    <li key={post.id}>
-      <Link to={`/posts/${post.id}`}>{post.title}</Link>
-    </li>
-  ))
-
+  // Use the same posts query, but extract only part of its data
+  const { postsForUser } = useGetPostsQuery(undefined, {
+    selectFromResult: (result) => ({
+      // We can optionally include the other metadata fields from the result here
+      ...result,
+      // Include a field called `postsForUser` in the hook result object,
+      // which will be a filtered list of posts
+      postsForUser: selectPostsForUser(result.data, userId),
+    }),
+  })
+  console.log('rendering')
   return (
     <section>
       {!user ? (
@@ -28,7 +30,13 @@ export const UserPage = ({
       ) : (
         <>
           <h2>{user.name}</h2>
-          <ul>{postTitles}</ul>
+          <ul>
+            {postsForUser.map((post) => (
+              <li key={post.id}>
+                <Link to={`/posts/${post.id}`}>{post.title}</Link>
+              </li>
+            ))}
+          </ul>
         </>
       )}
     </section>

@@ -1,23 +1,18 @@
-import { useEffect } from 'react'
+import classNames from 'classnames'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 
-import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import { Spinner } from '../../components/Spinner'
+import { useGetPostsQuery } from '../api/apiSlice'
 import { PostAuthor } from './PostAuthor'
-import { fetchPosts, selectPostById, selectPostIds } from './postsSlice'
+import { Post } from './postsSlice'
 import { ReactionButtons } from './ReactionButtons'
 import { TimeAgo } from './TimeAgo'
 
 type Props = {
-  postId: string
+  post: Post
 }
-const PostExcerpt = ({ postId }: Props) => {
-  const post = useAppSelector((state) => selectPostById(state, postId))
-
-  if (!post) {
-    return null
-  }
-
+const PostExcerpt = ({ post }: Props) => {
   return (
     <article className="post-excerpt" key={post.id}>
       <h3>{post.title}</h3>
@@ -34,31 +29,40 @@ const PostExcerpt = ({ postId }: Props) => {
 }
 
 export const PostsList = () => {
-  const dispatch = useAppDispatch()
-  const posts = useAppSelector(selectPostIds)
-  const postsStatus = useAppSelector((state) => state.posts.status)
-  const error = useAppSelector((state) => state.posts.error)
+  const {
+    data: posts = [],
+    isLoading,
+    isFetching,
+    isSuccess,
+    isError,
+    refetch,
+  } = useGetPostsQuery()
 
-  useEffect(() => {
-    if (postsStatus === 'idle') {
-      dispatch(fetchPosts())
-    }
-  }, [postsStatus, dispatch])
+  const sortedPosts = useMemo(() => {
+    const postsCopy = posts.slice()
+    postsCopy.sort((a, b) => b.date.localeCompare(a.date))
+    return postsCopy
+  }, [posts])
 
   let content
-  if (postsStatus === 'loading') {
+  if (isLoading) {
     content = <Spinner text="Loading..." />
-  } else if (postsStatus === 'succeeded') {
-    content = posts.map((postId) => (
-      <PostExcerpt key={postId} postId={postId.toString()} />
-    ))
-  } else if (postsStatus === 'failed') {
-    content = <div>{error}</div>
+  } else if (isSuccess) {
+    content = (
+      <div className={classNames('posts-container', { disabled: isFetching })}>
+        {sortedPosts.map((post) => (
+          <PostExcerpt key={post.id} post={post} />
+        ))}
+      </div>
+    )
+  } else if (isError) {
+    content = <div>Error occured</div>
   }
 
   return (
     <section className="posts-list">
       <h2>Posts</h2>
+      <button onClick={refetch}>Refetch Posts</button>
       {content}
     </section>
   )

@@ -2,8 +2,8 @@ import {
   createSlice,
   PayloadAction,
   createAsyncThunk,
-  createSelector,
   createEntityAdapter,
+  createSelector,
 } from '@reduxjs/toolkit'
 
 import { RootState } from './../../app/store'
@@ -52,14 +52,6 @@ const initialState = postsAdapter.getInitialState<InitialState>({
   error: null,
 })
 
-export const fetchPosts = createAsyncThunk<Post[]>(
-  'posts/fetchPosts',
-  async () => {
-    const response = await client.get('/fakeApi/posts')
-    return response.data
-  }
-)
-
 export const addNewPost = createAsyncThunk<
   Post,
   Omit<Post, 'id' | 'date' | 'reactions'>
@@ -102,23 +94,10 @@ const postsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(fetchPosts.pending, (state) => {
-        state.status = 'loading'
-      })
-      .addCase(fetchPosts.fulfilled, (state, action) => {
-        state.status = 'succeeded'
-        // Add any fetched posts to the array
-        postsAdapter.upsertMany(state, action.payload)
-      })
-      .addCase(fetchPosts.rejected, (state, action) => {
-        state.status = 'failed'
-        state.error = action.error.message ?? 'Unknow error occured'
-      })
-      .addCase(addNewPost.fulfilled, (state, action) => {
-        // We can directly add the new post object to our posts array
-        postsAdapter.addOne(state, action.payload)
-      })
+    builder.addCase(addNewPost.fulfilled, (state, action) => {
+      // We can directly add the new post object to our posts array
+      postsAdapter.addOne(state, action.payload)
+    })
   },
 })
 
@@ -134,7 +113,8 @@ export const {
   // Pass in a selector that returns the posts slice of state
 } = postsAdapter.getSelectors<RootState>((state) => state.posts)
 
-export const selectPostsByUser = createSelector(
-  [selectAllPosts, (state: RootState, userId: string) => userId],
-  (posts, userId) => posts.filter((post) => post.user === userId)
+export const selectPostsForUser = createSelector(
+  (data: Post[] | undefined) => data,
+  (data: Post[] | undefined, userId: string) => userId,
+  (data, userId: string) => data?.filter((post) => post.user === userId) ?? []
 )

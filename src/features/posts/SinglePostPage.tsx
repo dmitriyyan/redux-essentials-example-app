@@ -1,9 +1,9 @@
 import { RouteComponentProps } from 'react-router-dom'
 import { Link } from 'react-router-dom'
+import { Spinner } from '../../components/Spinner'
 
-import { useAppSelector } from '../../app/hooks'
+import { useGetPostQuery } from '../api/apiSlice'
 import { PostAuthor } from './PostAuthor'
-import { selectPostById } from './postsSlice'
 import { ReactionButtons } from './ReactionButtons'
 import { TimeAgo } from './TimeAgo'
 
@@ -11,10 +11,13 @@ export const SinglePostPage = ({
   match,
 }: RouteComponentProps<{ postId: string }>) => {
   const { postId } = match.params
+  const { data: post, isFetching, isSuccess } = useGetPostQuery(postId)
 
-  const post = useAppSelector((state) => selectPostById(state, postId))
+  if (isFetching) {
+    return <Spinner text="Loading..." />
+  }
 
-  if (!post) {
+  if (!isSuccess) {
     return (
       <section>
         <h2>Post not found!</h2>

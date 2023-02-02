@@ -6,7 +6,8 @@ import { selectAllUsers } from '../users/usersSlice'
 
 import {
   allNotificationsRead,
-  selectAllNotifications,
+  selectMetadataEntities,
+  useGetNotificationsQuery,
 } from './notificationsSlice'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 
@@ -17,8 +18,10 @@ export const NotificationsList = () => {
     dispatch(allNotificationsRead())
   })
 
-  const notifications = useAppSelector(selectAllNotifications)
   const users = useAppSelector(selectAllUsers)
+
+  const { data: notifications = [] } = useGetNotificationsQuery()
+  const notificationsMetadata = useAppSelector(selectMetadataEntities)
 
   const renderedNotifications = notifications.map((notification) => {
     const date = parseISO(notification.date)
@@ -26,9 +29,9 @@ export const NotificationsList = () => {
     const user = users.find((user) => user.id === notification.user) || {
       name: 'Unknown User',
     }
-
+    const metadata = notificationsMetadata[notification.id]
     const notificationClassname = classNames('notification', {
-      new: notification.isNew,
+      new: metadata?.isNew,
     })
 
     return (

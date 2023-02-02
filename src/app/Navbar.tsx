@@ -1,17 +1,25 @@
 import { Link } from 'react-router-dom'
-import {
-  fetchNotifications,
-  selectAllNotifications,
-} from '../features/notifications/notificationsSlice'
+
 import { useAppDispatch, useAppSelector } from './hooks'
+
+import {
+  fetchNotificationsWebsocket,
+  selectNotificationsMetadata,
+  useGetNotificationsQuery,
+} from '../features/notifications/notificationsSlice'
 
 export const Navbar = () => {
   const dispatch = useAppDispatch()
-  const notifications = useAppSelector(selectAllNotifications)
-  const numUnreadNotifications = notifications.filter((n) => !n.read).length
+  // Trigger initial fetch of notifications and keep the websocket open to receive updates
+  useGetNotificationsQuery()
+
+  const notificationsMetadata = useAppSelector(selectNotificationsMetadata)
+  const numUnreadNotifications = notificationsMetadata.filter(
+    (n) => !n.read
+  ).length
 
   const fetchNewNotifications = () => {
-    dispatch(fetchNotifications())
+    dispatch(fetchNotificationsWebsocket())
   }
 
   let unreadNotificationsBadge

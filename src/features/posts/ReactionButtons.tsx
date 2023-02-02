@@ -1,10 +1,5 @@
-import { useAppDispatch } from '../../app/hooks'
-import {
-  reactions,
-  reactionEmoji,
-  Reactions,
-  reactionAdded,
-} from './postsSlice'
+import { useAddReactionMutation } from '../api/apiSlice'
+import { reactions, reactionEmoji, Reactions } from './postsSlice'
 
 type Props = {
   postId: string
@@ -12,14 +7,14 @@ type Props = {
 }
 
 export const ReactionButtons = ({ postReactions, postId }: Props) => {
-  const dispatch = useAppDispatch()
+  const [addReaction] = useAddReactionMutation()
 
   const reactionButtons = reactions.map((name) => {
     return (
       <button
-        onClick={() =>
-          dispatch(reactionAdded({ postId: postId, reaction: name }))
-        }
+        onClick={() => {
+          addReaction({ postId, reaction: name })
+        }}
         key={name}
         type="button"
         className="muted-button reaction-button"
